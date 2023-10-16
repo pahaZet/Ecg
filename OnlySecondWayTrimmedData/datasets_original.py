@@ -22,15 +22,10 @@ class ECGSequence(Sequence):
             self.y = pd.read_csv(path_to_csv).values
         # Get tracings
         self.f = h5py.File(path_to_hdf5, "r")
-        self.x = self.f[hdf5_dset]
         
-        #self.x = np.delete(self.x, [0,2,3,4,5,6,7,8,9,10,11], 2)
-        # self.x = np.delete(self.f[hdf5_dset][:,700:3400,:], [0,2,3,4,5,6,7,8,9,10,11], 2)
-
-        for x in self.x:
-            print(x.shape)
-            for x1 in x:
-                print(x1)
+        # Ввиду того, что здесь трим по данным еще есть, уберем все отведения, кроме 2ого и вырежем середину, 
+        # т.к. много данных с нулями вначале и в конце, то есть значимые данные в середине, начало и конец заполняются нулями
+        self.x = np.delete(self.f[hdf5_dset][:,700:3400,:], [0,2,3,4,5,6,7,8,9,10,11], 2)
 
         self.batch_size = batch_size
         if end_idx is None:
