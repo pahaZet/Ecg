@@ -1,4 +1,4 @@
-ï»¿import argparse
+import argparse
 import numpy as np
 import pandas as pd
 import h5py
@@ -13,17 +13,15 @@ import warnings
 
 from sklearn import preprocessing
 
-# Ð‘ÐµÑ€ÐµÐ¼ Ð¸ÑÑ…Ð¾Ð´Ð½Ñ‹Ð¹ Ð´Ð°Ñ‚Ð°ÑÐµÑ‚ Ð½Ð° 12 Ð¾Ñ‚Ð²ÐµÐ´ÐµÐ½Ð¸Ð¹.
-# ÐžÑÑ‚Ð°Ð²Ð»ÑÐµÐ¼ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ 2Ð¾Ðµ Ð¾Ñ‚Ð²ÐµÐ´ÐµÐ½Ð¸Ðµ.
-# Ð’Ñ‹Ñ€ÐµÐ·Ð°ÐµÐ¼ Ð¸Ð· 2Ð¾Ð³Ð¾ Ð¾Ñ‚Ð²ÐµÐ´ÐµÐ½Ð¸Ñ Ñ†ÐµÐ½Ñ‚Ñ€Ð°Ð»ÑŒÐ½Ñ‹Ðµ 2700 Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ð¹.
-# Ð­Ñ‚Ð¸ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ Ð·Ð°Ð¿ÑƒÑÐºÐ°ÐµÐ¼ Ñ‡ÐµÑ€ÐµÐ· bypass Ð´Ð»Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ ÑˆÑƒÐ¼Ð¾Ð².
-# ÐÐ¾Ñ€Ð¼Ð°Ð»Ð¸Ð·ÑƒÐµÐ¼ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ Ð¾Ñ‚ 0 Ð´Ð¾ 1
+# Áåðåì èñõîäíûé äàòàñåò íà 12 îòâåäåíèé.
+# Îñòàâëÿåì òîëüêî 2îå îòâåäåíèå.
+# Âûðåçàåì èç 2îãî îòâåäåíèÿ öåíòðàëüíûå 2700 çíà÷åíèé.
+# Ýòè çíà÷åíèÿ çàïóñêàåì ÷åðåç bypass äëÿ óäàëåíèÿ øóìîâ.
+# Íîðìàëèçóåì çíà÷åíèÿ îò 0 äî 1
 
-
-_file_name = ""
 
 # Print iterations progress
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = 'â–ˆ', printEnd = "\r"):
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '?', printEnd = "\r"):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -45,8 +43,14 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
         print()
 
 
-# Ñ„Ð¸Ð»ÑŒÑ‚Ñ€ Ð¾Ñ‚ ÑˆÑƒÐ¼Ð° Ð¸ Ð½Ð¾Ñ€Ð¼Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ñ Ð¾Ñ‚ 0 Ð´Ð¾ 1
-# ÑƒÐ¶Ðµ Ð¾Ñ‚Ñ‚Ñ€Ð¸Ð¼Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð½Ñ‹Ñ… Ð´Ð°Ñ‚Ð°ÑÐµÑ‚Ð¾Ð²
+def boolstr_to_floatstr(v):
+    if v == True:
+        return 1
+    elif v == False:
+        return 0
+    else:
+        return v
+    
 def filter_and_normalize( inputdata):
     nonzeros = np.count_nonzero(inputdata)
     have_NaNs = np.isnan(inputdata).any()
@@ -56,27 +60,25 @@ def filter_and_normalize( inputdata):
             #plt.clf()
             #plt.plot(inputdata)
 
-             # Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ð°Ñ†Ð¸Ñ Ð­ÐšÐ“ 
+             # ôèëüòðàöèÿ ÝÊÃ 
             signals, info = nk.ecg_process(opty_ds, sampling_rate=400)
             tmpx = signals['ECG_Clean'].values
             tmpx = np.reshape(tmpx, (-1, 1))
             #plt.plot(tmpx)
             
-            # Ð½Ð¾Ñ€Ð¼Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ñ Ð¾Ñ‚ 0 Ð´Ð¾ 1 
+            # íîðìàëèçàöèÿ îò 0 äî 1 
             min_max_scaler = preprocessing.MinMaxScaler()
             scaled_tmpx = min_max_scaler.fit_transform(tmpx)
             #plt.plot(scaled_tmpx)
             
             return True, scaled_tmpx
         except Exception as inst:
-            #print(" exc ", inst)
+            print(" exc ", inst)
             return False, None
     else:
-        #print("nonzeros is ", nonzeros, ", have Nans - ", have_NaNs)
+        print("nonzeros is ", nonzeros, ", have Nans - ", have_NaNs)
         return False, None
-       
-# Ð²Ñ‹Ð±Ð¾Ñ€ÐºÐ° Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð¾Ð´Ð½Ð¾Ð³Ð¾ Ñ„Ð°Ð¹Ð»Ð° ÑÐºÐ³ Ñ Ð´Ð¸Ð°Ð³Ð½Ð¾Ð·Ð°Ð¼Ð¸ Ð¸Ð·
-# ÑƒÐ¶Ðµ Ð¾Ñ‚Ñ‚Ñ€Ð¸Ð¼Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð½Ñ‹Ñ… Ð´Ð°Ñ‚Ð°ÑÐµÑ‚Ð¾Ð²    
+         
 def makeEachEcgTrimmedFiltered(pathToFilesDir, pathToCsv):
     readedCsv = pd.read_csv(pathToCsv)
     
@@ -88,7 +90,7 @@ def makeEachEcgTrimmedFiltered(pathToFilesDir, pathToCsv):
        
             f = h5py.File(file, "r")
             print("open file ", file, os.path.basename(file))
-            dset = f['tracings'][:,700:3400,:] # Ñ‚Ðµ ÑÐ°Ð¼Ñ‹Ðµ 2700 Ð·Ð°Ð¿Ð¸ÑÐµÐ¹ Ð¸Ð· Ñ†ÐµÐ½Ñ‚Ñ€Ð°
+            dset = f['tracings'][:,700:3400,:] # òå ñàìûå 2700 çàïèñåé èç öåíòðà
 
             csv4hdf = readedCsv.loc[readedCsv['trace_file'].isin([os.path.basename(file)])] 
             
@@ -109,17 +111,17 @@ def makeEachEcgTrimmedFiltered(pathToFilesDir, pathToCsv):
                     valsTrim = vals[4:10]
                     vectorized_res = np.vectorize(boolstr_to_floatstr)(valsTrim).astype(np.float64)
                     
-                    # Ð²Ð¾Ð·ÑŒÐ¼ÐµÐ¼ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ñ Ð½Ð°Ñ€ÑƒÑˆÐµÐ½Ð¸ÑÐ¼Ð¸
+                    # âîçüìåì òîëüêî ñ íàðóøåíèÿìè
                     nonzeros = np.count_nonzero(vectorized_res)
                     if nonzeros > 0:
                         new_full_y[idx_res] = vectorized_res
-                        #print(vectorized_res, " ", idx, " ", idx_res)
+                        print(vectorized_res, " ", idx, " ", idx_res)
 
-                        # # Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ð°Ñ†Ð¸Ñ Ð­ÐšÐ“ 
+                        # # ôèëüòðàöèÿ ÝÊÃ 
                         # signals, info = nk.ecg_process(tmpx[idx].flatten(), sampling_rate=400)
                         # filtered_x_data = signals['ECG_Clean'].values
 
-                        # # Ð½Ð¾Ñ€Ð¼Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ñ Ð¾Ñ‚ 0 Ð´Ð¾ 1 
+                        # # íîðìàëèçàöèÿ îò 0 äî 1 
                         # reshaped_filtered_data = np.reshape(filtered_x_data, (-1, 1))
                         # scaled_tmpx = min_max_scaler.fit_transform(reshaped_filtered_data)
                     
@@ -144,8 +146,8 @@ def makeEachEcgTrimmedFiltered(pathToFilesDir, pathToCsv):
             break
 
 
-# Ð²Ñ‹Ð±Ð¾Ñ€ÐºÐ° Ð²ÑÐµÑ… ÑÐºÐ³ Ñ Ð´Ð¸Ð°Ð³Ð½Ð¾Ð·Ð°Ð¼Ð¸ Ð¸Ð·
-# ÑƒÐ¶Ðµ Ð¾Ñ‚Ñ‚Ñ€Ð¸Ð¼Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð½Ñ‹Ñ… Ð´Ð°Ñ‚Ð°ÑÐµÑ‚Ð¾Ð²
+# âûáîðêà âñåõ ýêã ñ äèàãíîçàìè èç
+# óæå îòòðèìèðîâàííûõ äàòàñåòîâ
 def make_each_ecg_trimmed_filtered_only_dia_from_all_already_trimmed_datasets(pathToFilesDir, path_to_result_hdf5):
     
     files = [f for f in pathlib.Path(pathToFilesDir).glob("*.hdf5")]
@@ -153,7 +155,7 @@ def make_each_ecg_trimmed_filtered_only_dia_from_all_already_trimmed_datasets(pa
     new_x = []
     new_y = []
     idx_res = 0
-
+    
     with h5py.File(fileName, 'w') as newf:    
         for file in files:
             f = h5py.File(file, "r")
@@ -162,7 +164,7 @@ def make_each_ecg_trimmed_filtered_only_dia_from_all_already_trimmed_datasets(pa
             tmpy = f['y']
             einum = enumerate(tmpx)
             for idx, t in einum:
-                # Ð²Ð¾Ð·ÑŒÐ¼ÐµÐ¼ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ñ Ð½Ð°Ñ€ÑƒÑˆÐµÐ½Ð¸ÑÐ¼Ð¸
+                # âîçüìåì òîëüêî ñ íàðóøåíèÿìè
                 nonzeros = np.count_nonzero(tmpy[idx])
                 if nonzeros > 0:
                     x_data_res, x_data = filter_and_normalize(t)                
@@ -173,9 +175,11 @@ def make_each_ecg_trimmed_filtered_only_dia_from_all_already_trimmed_datasets(pa
                         # plt.clf()
                         # plt.plot(x_data)
                     
-                        #print(tmpy[idx],", idx_res - ", idx_res)
+                        print(tmpy[idx],", idx_res - ", idx_res)
+
                         idx_res += 1
-                        printProgressBar(idx + 1, len(tmpx), prefix = os.path.basename(file), suffix = 'Complete', length = 50)
+                    else:
+                        print("no exec filter_and_normalize, idx - ",idx)
             print("file ", file, " complite process, actual_data_count", idx_res)   
             f.close
         
@@ -197,4 +201,4 @@ if __name__ == '__main__':
     
 
     #makeEachEcgTrimmedFiltered("C:\\paha\\ECG\\Code15data\\exams\\","C:\\paha\\ECG\\Code15data\\exams.csv")
-    make_each_ecg_trimmed_filtered_only_dia_from_all_already_trimmed_datasets(args.path_to_hdf5, args.path_to_result_hdf5)
+    make_each_ecg_trimmed_filtered_only_dia_from_all_already_trimmed_datasets(args.path_to_hdf5, path_to_result_hdf5)
